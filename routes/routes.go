@@ -6,6 +6,7 @@ import (
 )
 
 func Server() {
+
 	e := echo.New()
 	e.GET("/", controllers.User)
 	e.GET("/test", controllers.TestRquest)

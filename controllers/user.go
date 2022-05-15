@@ -6,18 +6,15 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
-	// "go.mongodb.org/mongo-driver/mongo"
-	// "go.mongodb.org/mongo-driver/mongo/options"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
-
-const uri = "mongodb+srv://jorgemarquez2222:u2343590H@cluster0.cjerk.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 
 var client = ConnDB()
 var users = client.Database("test").Collection("users")
@@ -45,6 +42,9 @@ func User(c echo.Context) error {
 }
 
 func ConnDB() *mongo.Client {
+	godotenv.Load()
+	var uri = os.Getenv("url_base")
+
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
 		panic(err)
