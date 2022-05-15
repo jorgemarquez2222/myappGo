@@ -7,8 +7,9 @@ import (
 
 func Server() {
 	e := echo.New()
-
 	e.GET("/", controllers.User)
 	e.GET("/test", controllers.TestRquest)
+	e.GET("/testMongo", controllers.TestMongo)
+
 	e.Logger.Fatal(e.Start(":1323"))
 }

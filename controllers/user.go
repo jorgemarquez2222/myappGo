@@ -1,12 +1,26 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	// "go.mongodb.org/mongo-driver/mongo"
+	// "go.mongodb.org/mongo-driver/mongo/options"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
+
+const uri = "mongodb+srv://jorgemarquez2222:u2343590H@cluster0.cjerk.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+
+var client = ConnDB()
+var users = client.Database("test").Collection("users")
 
 type Person struct {
 	Name  string `json:"nombre"`
@@ -30,6 +44,23 @@ func User(c echo.Context) error {
 	return c.JSON(http.StatusOK, person)
 }
 
+func ConnDB() *mongo.Client {
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	if err != nil {
+		panic(err)
+	}
+	if err := client.Ping(context.TODO(), readpref.Primary()); err != nil {
+		panic(err)
+	}
+	fmt.Println("Connected to MongoDB!")
+	return client
+}
+
+type PersonMongo struct {
+	Name string `json:"nombre"`
+	Rut  string `json:"rut"`
+}
+
 func TestRquest(c echo.Context) error {
 	placeholder := []PlaceHolder{}
 	resp, _ := http.Get("https://jsonplaceholder.typicode.com/posts")
@@ -37,4 +68,17 @@ func TestRquest(c echo.Context) error {
 	body, _ := io.ReadAll(resp.Body)
 	json.Unmarshal(body, &placeholder)
 	return c.JSON(http.StatusOK, placeholder)
+}
+
+func TestMongo(c echo.Context) error {
+	cursor, err := users.Find(c.Request().Context(),
+		bson.D{{Key: "name", Value: "Jorge"}})
+	if err != nil {
+		panic(err)
+	}
+	var results []PersonMongo
+	if err = cursor.All(context.TODO(), &results); err != nil {
+		panic(err)
+	}
+	return c.JSON(http.StatusOK, results)
 }
