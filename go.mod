@@ -1,4 +1,4 @@
-module myapp
+module github.com/jorgemarquez2222/myappGo
 
 go 1.18
 
