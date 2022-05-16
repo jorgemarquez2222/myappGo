@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
+	"sync"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
@@ -81,4 +84,44 @@ func TestMongo(c echo.Context) error {
 		panic(err)
 	}
 	return c.JSON(http.StatusOK, results)
+}
+
+func DoSomethingChannel(c chan<- int, i int) {
+	fmt.Println("Doing something numero ", i)
+	time.Sleep(time.Duration(rand.Intn(i+1)) * time.Second)
+	c <- i
+}
+
+func TestChannels(c echo.Context) error {
+	c1 := make(chan int)
+
+	for i := 0; i < 10; i++ {
+		go DoSomethingChannel(c1, i)
+	}
+	for i := 0; i < 10; i++ {
+		fmt.Println("")
+		fmt.Println("Finished channel number", <-c1)
+	}
+	return c.JSON(http.StatusOK, "results")
+
+}
+
+func DoSomethingWg(i int, wg *sync.WaitGroup) {
+	defer wg.Done()
+	time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
+	fmt.Println("Doing something numero ", i)
+
+}
+
+func TestWg(c echo.Context) error {
+	var wg sync.WaitGroup
+	len := rand.Intn(60)
+	fmt.Println("cantidad a ejecutar", len)
+	for i := 0; i < len; i++ {
+		wg.Add(1)
+		go DoSomethingWg(i, &wg)
+	}
+	wg.Wait()
+	return c.JSON(http.StatusOK, "results")
+
 }
