@@ -7,20 +7,13 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
-	"os"
 	"sync"
 	"time"
 
-	"github.com/joho/godotenv"
+	db "github.com/jorgemarquez2222/myappGo/database"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
-
-var client = ConnDB()
-var users = client.Database("test").Collection("users")
 
 type Person struct {
 	Name  string `json:"nombre"`
@@ -44,21 +37,6 @@ func User(c echo.Context) error {
 	return c.JSON(http.StatusOK, person)
 }
 
-func ConnDB() *mongo.Client {
-	godotenv.Load()
-	var uri = os.Getenv("url_base")
-
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
-	if err != nil {
-		panic(err)
-	}
-	if err := client.Ping(context.TODO(), readpref.Primary()); err != nil {
-		panic(err)
-	}
-	fmt.Println("Connected to MongoDB!")
-	return client
-}
-
 type PersonMongo struct {
 	Name string `json:"nombre"`
 	Rut  string `json:"rut"`
@@ -67,13 +45,14 @@ type PersonMongo struct {
 func TestRquest(c echo.Context) error {
 	placeholder := []PlaceHolder{}
 	resp, _ := http.Get("https://jsonplaceholder.typicode.com/posts")
-	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
 	json.Unmarshal(body, &placeholder)
 	return c.JSON(http.StatusOK, placeholder)
 }
 
 func TestMongo(c echo.Context) error {
+	users := db.Mgr.GetCollection("users")
 	cursor, err := users.Find(c.Request().Context(),
 		bson.D{{Key: "name", Value: "Jorge"}})
 	if err != nil {

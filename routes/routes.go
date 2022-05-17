@@ -2,11 +2,13 @@ package routes
 
 import (
 	controllers "github.com/jorgemarquez2222/myappGo/controllers"
+	db "github.com/jorgemarquez2222/myappGo/database"
+
 	"github.com/labstack/echo/v4"
 )
 
 func Server() {
-
+	db.ConnDB()
 	e := echo.New()
 	e.GET("/", controllers.User)
 	e.GET("/test", controllers.TestRquest)
